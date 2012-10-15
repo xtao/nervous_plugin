@@ -1,5 +1,17 @@
 // configuration
 var interval = 5*1000;
+var vm_field_total_num = 14;
+var vm_field_to_post = [
+    'lpages',
+    'mmu-cache-miss',
+    'mmu-flooded',
+    'mmu-pte-updated',
+    'mmu-pte-write',
+    'mmu-pte-zapped',
+    'mmu-recycled',
+    'mmu-unsync-page',
+    'remote-tlb-flush'
+];
 
 //deps
 var child_process = require('child_process');
@@ -8,9 +20,14 @@ var child_process = require('child_process');
 //our plugin main function
 module.exports = function( axon ) {
 
+    var emit_data = function(vm) {
+        for (var i = 0; i < vm_field_to_page.length; i++)
+            axon.emit( 'data',  vm['zonename'] + '.vm.' + vm_field_to_post[i], vm[vm_field_to_post[i]] );
+    }
+
     var on_exec_complete = function( err, stdout, stderr ) {
-        var virtual_machine = {}; 
-        var virtual_machines = {};
+        var virtual_machine = [];
+        var virtual_machines = [];
         var lines = stdout.split('\n');
         for (var i = 0; i < lines.length; i++) {
             var field = lines[i].split(':');
@@ -18,25 +35,12 @@ module.exports = function( axon ) {
                 continue;
             }
             var metric = field[3].split('\t');
-            virtual_machine[metric[0]] = metric[1]; 
-            virtual_machines[field[1]] = virtual_machine;
-            if (i % 14 == 13)
-                virtual_machine = {};
+            virtual_machine[metric[0]] = metric[1];
+            if (i % vm_field_total_num == vm_field_total_num - 1) {
+                emit_data(virtual_machine);
+                virtual_machine = [];
+            }
         }
-
-        for (key in virtual_machines) {
-            virtual_machine = virtual_machines[key];
-            axon.emit( 'data',  virtual_machine['zonename'] + '.vm.lpages', virtual_machine['lpages'] );
-            axon.emit( 'data',  virtual_machine['zonename'] + '.vm.mmu-cache-miss', virtual_machine['mmu-cache-miss'] );
-            axon.emit( 'data',  virtual_machine['zonename'] + '.vm.mmu-flooded', virtual_machine['mmu-flooded'] );
-            axon.emit( 'data',  virtual_machine['zonename'] + '.vm.mmu-pte-updated', virtual_machine['mmu-pte-updated'] );
-            axon.emit( 'data',  virtual_machine['zonename'] + '.vm.mmu-pte-write', virtual_machine['mmu-pte-write'] );
-            axon.emit( 'data',  virtual_machine['zonename'] + '.vm.mmu-pte-zapped', virtual_machine['mmu-pte-zapped'] );
-            axon.emit( 'data',  virtual_machine['zonename'] + '.vm.mmu-recycled', virtual_machine['mmu-recycled'] );
-            axon.emit( 'data',  virtual_machine['zonename'] + '.vm.mmu-unsync-page', virtual_machine['mmu-unsync-page'] );
-            axon.emit( 'data',  virtual_machine['zonename'] + '.vm.remote-tlb-flush', virtual_machine['remote-tlb-flush'] );
-        }
-
     };
 
     //this checks it
