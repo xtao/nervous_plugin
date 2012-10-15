@@ -21,13 +21,12 @@ var child_process = require('child_process');
 module.exports = function( axon ) {
 
     var emit_data = function(vm) {
-        for (var i = 0; i < vm_field_to_page.length; i++)
+        for (var i = 0; i < vm_field_to_post.length; i++)
             axon.emit( 'data',  vm['zonename'] + '.vm.' + vm_field_to_post[i], vm[vm_field_to_post[i]] );
     }
 
     var on_exec_complete = function( err, stdout, stderr ) {
         var virtual_machine = [];
-        var virtual_machines = [];
         var lines = stdout.split('\n');
         for (var i = 0; i < lines.length; i++) {
             var field = lines[i].split(':');
