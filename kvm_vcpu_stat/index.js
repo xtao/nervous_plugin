@@ -32,7 +32,7 @@ module.exports = function( axon ) {
 
     var emit_data = function(cpu) {
         for (var i = 0; i < vcpu_field_to_post.length; i++)
-            axon.emit( 'data', cpu['zonename'] + '.vcpu.' + cpu['instance'] + '.' + vcpu_field_to_post[i], virtual_cpu[vcpu_field_to_post[i]] );
+            axon.emit( 'data', cpu['zonename'] + '.vcpu.' + cpu['instance'] + '.' + vcpu_field_to_post[i], cpu[vcpu_field_to_post[i]] );
     }
 
     var on_exec_complete = function( err, stdout, stderr ) {

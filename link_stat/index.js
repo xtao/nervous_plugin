@@ -1,7 +1,7 @@
 // configuration
 var interval = 5*1000;
 var link_field_total_num = 25;
-var vm_field_to_post = [
+var link_field_to_post = [
 'obytes',
 'obytes64',
 'rbytes',
@@ -17,7 +17,7 @@ module.exports = function( axon ) {
 
     var emit_data = function(link) {
         for (var i = 0; i < link_field_to_post.length; i++)
-            axon.emit( 'data',  link['zonename'] + '.link.' + link_field_to_post[i], link[link_field_to_post[i]] );
+            axon.emit( 'data',  link['zonename'] + '.link.' + link['name'] + '.' + link_field_to_post[i], link[link_field_to_post[i]] );
     }
 
     var on_exec_complete = function( err, stdout, stderr ) {
@@ -31,6 +31,7 @@ module.exports = function( axon ) {
             var metric = field[3].split('\t');
             link[metric[0]] = metric[1];
             if (i % link_field_total_num == link_field_total_num - 1) {
+                link['name'] = field[2];
                 emit_data(link);
                 link = [];
             }
