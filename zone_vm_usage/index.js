@@ -1,5 +1,6 @@
 // configuration
-var interval = 5*1000;
+var interval = 15*1000;
+
 var ZONE_ID    =   0;
 var UUID_ID    =   1;
 var TYPE_ID    =   2;
@@ -11,10 +12,10 @@ var vm_list = [];
 
 var link_field_total_num = 25;
 var link_field_to_post = [
-'obytes',
-'obytes64',
-'rbytes',
-'rbytes64'
+    'obytes',
+    'obytes64',
+    'rbytes',
+    'rbytes64'
 ];
 
 //deps
@@ -26,7 +27,7 @@ module.exports = function( axon ) {
 
     var emit_data = function(data) {
         axon.emit( 'data',  data['alias'] + '.' + data['name'], data['data'] );
-    }
+    };
 
     var on_cpu_complete = function( err, stdout, stderr ) {
         var lines = stdout.split('\n');
@@ -48,12 +49,14 @@ module.exports = function( axon ) {
                     var zone_cpu_usage = matches[6].match(/(.*)%/);
                     var zone_uuid = matches[7];
                     zone_info = vm_list[zone_id];
-                    data['alias'] = zone_info['alias'];
-                    data['name'] = 'memory_usage';
-                    data['data'] = zone_memory_usage;
+                    var zone_alias = zone_info[ALIAS_ID];
+                    zone_alias = zone_alias.replace(/\./, '_');
+                    data['alias'] = zone_alias;
+                    data['name'] = 'memory_used';
+                    data['data'] = zone_memory_usage[1];
                     emit_data(data);
-                    data['name'] = 'cpu_usage';
-                    data['data'] = zone_cpu_usage;
+                    data['name'] = 'cpu_used';
+                    data['data'] = zone_cpu_usage[1];
                     emit_data(data);
                 }
             }
@@ -61,23 +64,23 @@ module.exports = function( axon ) {
     };
 
     var emit_link = function(link) {
-        for (var i = 0; i < link.length; i++) {
-            var data = [];
-            zone_id = link['name'].match(/z(\d+)_net/);
-            zone_info = vm_list[zone_id];
-            data['alias'] = zone_info['alias'];
-            for (var i = 0; i < link_field_to_post.length; i++) {
-                data['name'] = link['name'] + '.' + link_field_to_post[i];
-                data['data'] = link[link_field_to_post[i]];
-                emit_data(data);
-            }
+        var data = [];
+        var zone_name = link['zonename']
+        var zone_info = vm_list[zone_name];
+        var zone_alias = zone_info[ALIAS_ID];
+        zone_alias = zone_alias.replace(/\./, '_');
+        data['alias'] = zone_alias;
+        for (var i = 0; i < link_field_to_post.length; i++) {
+            data['name'] = link['name'] + '.' + link_field_to_post[i];
+            data['data'] = link[link_field_to_post[i]];
+            emit_data(data);
         }
-    }
+    };
 
     var on_link_complete = function( err, stdout, stderr ) {
+        var link = [];
         var lines = stdout.split('\n');
         for (var i = 0; i < lines.length; i++) {
-            var link = [];
             var field = lines[i].split(':');
             if (field.length < 4) {
                 continue;
@@ -86,7 +89,8 @@ module.exports = function( axon ) {
             link[metric[0]] = metric[1];
             if (i % link_field_total_num == link_field_total_num - 1) {
                 link['name'] = field[2];
-                emit_data(link);
+                emit_link(link);
+                link = [];
             }
         }
     };
@@ -99,8 +103,10 @@ module.exports = function( axon ) {
             if (matches == null)
                 continue;
             var zone_name = matches[1];
-            zone_info = vm_list[zone_name];
-            data['alias'] = zone_info['alias'];
+            var zone_info = vm_list[zone_name];
+            var zone_alias = zone_info[ALIAS_ID];
+            zone_alias = zone_alias.replace(/\./, '_');
+            data['alias'] = zone_alias;
             data['name'] = matches[2] + '_used';
             data['data'] = matches[3];
             emit_data(data);
@@ -119,8 +125,8 @@ module.exports = function( axon ) {
             }
             vm_list[field[ZONE_ID]] = field;
             vm_list[field[UUID_ID]] = field;
-            child_process.exec( 'prstat -z' + field[ZONE_ID]  + ' -p -Z 1 1', on_cpu_complete);
-            child_process.exec( 'kstat -m link -n z' + ZONE_ID  + '_net* -p', on_link_complete);
+            child_process.exec( 'prstat -z ' + field[ZONE_ID]  + ' -Z 1 1', on_cpu_complete);
+            child_process.exec( 'kstat -m link -n z' + field[ZONE_ID]  + '_net* -p', on_link_complete);
             child_process.exec( 'zfs list -p -o name,used', on_disk_complete );
         }
     };
