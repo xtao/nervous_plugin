@@ -1,12 +1,12 @@
 {
-  "name": "nervous_plugin_kvm_vcpu_stat",
+  "name": "nervous_plugin_zone_vm_usage",
   "preferGlobal": false,
   "version": "0.1.0",
   "author": {
     "name": "Xu Tao",
     "email": "xutao881001@gmail.com"
   },
-  "description": "a SmartOS kvm vcpu stat plugin for Nervous",
+  "description": "a SmartOS zone vm usage plugin for Nervous",
   "contributors": [
     {
       "name": "Xu Tao",
