@@ -18,6 +18,14 @@ var link_field_to_post = [
     'rbytes64'
 ];
 
+var zone_zfs_total_num = 11;
+var zone_zfs_field_post = [
+    'reads',
+    'nread',
+    'writes',
+    'nwritten',
+];
+
 //deps
 var child_process = require('child_process');
 
@@ -113,6 +121,38 @@ module.exports = function( axon ) {
         }
     };
 
+    var emit_zfs = function(zfs) {
+        var data = [];
+        var zone_name = zfs['zonename']
+        var zone_info = vm_list[zone_name];
+        var zone_alias = zone_info[ALIAS_ID];
+        zone_alias = zone_alias.replace(/\./, '_');
+        data['alias'] = zone_alias;
+        for (var i = 0; i < zone_zfs_field_to_post.length; i++) {
+            data['name'] = zfs['name'] + '.' + zone_zfs_field_to_post[i];
+            data['data'] = zfs[zone_zfs_field_to_post[i]];
+            emit_data(data);
+        }
+    };
+
+    var on_zfs_complete = function( err, stdout, stderr ) {
+        var zfs = [];
+        var lines = stdout.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+            var field = lines[i].split(':');
+            if (field.length < 4) {
+                continue;
+            }
+            var metric = field[3].split('\t');
+            zfs[metric[0]] = metric[1];
+            if (i % zone_zfs_field_total_num == zone_zfs_field_total_num - 1) {
+                zfs['name'] = field[2];
+                emit_zfs(zfs);
+                zfs = [];
+            }
+        }
+    };
+
     var on_exec_complete = function( err, stdout, stderr ) {
         var lines = stdout.split('\n');
         for (var i = 0; i < lines.length; i++) {
@@ -128,6 +168,7 @@ module.exports = function( axon ) {
             child_process.exec( 'prstat -z ' + field[ZONE_ID]  + ' -Z 1 1', on_cpu_complete);
             child_process.exec( 'kstat -m link -n z' + field[ZONE_ID]  + '_net* -p', on_link_complete);
             child_process.exec( 'zfs list -p -o name,used', on_disk_complete );
+            child_process.exec( 'kstat -m zone_zfs -i ' + field[ZONE_ID] + ' -p', on_zfs_complete);
         }
     };
 
