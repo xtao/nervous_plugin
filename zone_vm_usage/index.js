@@ -112,6 +112,9 @@ module.exports = function( axon ) {
                 continue;
             var zone_name = matches[1];
             var zone_info = vm_list[zone_name];
+            if (zone_info == undefined) {
+                continue;
+            }
             var zone_alias = zone_info[ALIAS_ID];
             zone_alias = zone_alias.replace(/\./, '_');
             data['alias'] = zone_alias;
