@@ -84,7 +84,7 @@ module.exports = function( axon ) {
         var KW_S_ID = 3;
         var WAIT_ID = 4;
         var B_ID = 9;
-        var DEIVCE_ID = 10;
+        var DEVICE_ID = 10;
         var lines = stdout.split('\n');
         if (lines.length < 3) {
             return;
@@ -147,7 +147,7 @@ module.exports = function( axon ) {
     var check_global_zone_usage = function() {
         child_process.exec( 'uptime ', on_load_avg_complete);
         child_process.exec( 'vmstat 1 1 ', on_load_complete);
-        child_process.exec( 'iostat -xn 1 ', on_io_complete);
+        child_process.exec( 'iostat -xn 1 1 ', on_io_complete);
         child_process.exec( 'df -k zones', on_df_complete);
         child_process.exec( 'kstat -m link -n igb* -p', on_link_complete );
     };
