@@ -61,7 +61,7 @@ module.exports = function( axon ) {
             return;
         }
         for (var i = 2; i < lines.length; i++) {
-            var paylod = lines[i];
+            var payload = lines[i];
             payload = payload.replace(/[ ]+/g, ' ').replace(/^ /, '').replace(/ $/, '');
             var field = payload.split(' ');
             var runqueue = field[KTHR_R_ID];
@@ -87,7 +87,7 @@ module.exports = function( axon ) {
             return;
         }
         for (var i = 2; i < lines.length; i++) {
-            var paylod = lines[i];
+            var payload = lines[i];
             payload = payload.replace(/[ ]+/g, ' ').replace(/^ /, '').replace(/ $/, '');
             var field = payload.split(' ');
             var device = field[DEVICE_ID];
@@ -118,9 +118,12 @@ module.exports = function( axon ) {
             return;
         }
         for (var i = 1; i < lines.length; i++) {
-            var paylod = lines[i];
+            var payload = lines[i];
             payload = payload.replace(/[ ]+/g, ' ').replace(/^ /, '').replace(/ $/, '');
             var field = payload.split(' ');
+            if (field.length < 5) {
+                continue;
+            }
             var used = field[USED_ID];
             var avail = field[AVAIL_ID];
             var matches = field[CAPACITY_ID].match(/()%/);
