@@ -64,6 +64,9 @@ module.exports = function( axon ) {
             var payload = lines[i];
             payload = payload.replace(/[ ]+/g, ' ').replace(/^ /, '').replace(/ $/, '');
             var field = payload.split(' ');
+            if (field.length < 21) {
+                continue;
+            }
             var runqueue = field[KTHR_R_ID];
             var idle = field[CPU_ID_ID];
             var free = field[MEMORY_FREE_ID];
@@ -90,6 +93,9 @@ module.exports = function( axon ) {
             var payload = lines[i];
             payload = payload.replace(/[ ]+/g, ' ').replace(/^ /, '').replace(/ $/, '');
             var field = payload.split(' ');
+            if (field.length < 11) {
+                continue;
+            }
             var device = field[DEVICE_ID];
             var wait = field[WAIT_ID];
             var busy = field[B_ID];
