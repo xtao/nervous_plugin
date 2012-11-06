@@ -18,8 +18,8 @@ var link_field_to_post = [
     'rbytes64'
 ];
 
-var zone_zfs_total_num = 11;
-var zone_zfs_field_post = [
+var zone_zfs_field_total_num = 11;
+var zone_zfs_field_to_post = [
     'reads',
     'nread',
     'writes',
