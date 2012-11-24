@@ -19,7 +19,7 @@ var kstat = {
             'reads',
             'nread',
             'writes',
-            'nwrite'
+            'nwritten'
         ]
     }
 };
