@@ -4,7 +4,7 @@ var interval = 15*1000;
 var kstat = {
     'link':{
         'num': 25,
-        'name_id': 4,
+        'name_id': 2,
         'stat':[
             'obytes',
             'obytes64',
@@ -14,7 +14,7 @@ var kstat = {
     },
     'disk':{
         'num': 15,
-        'name_id': 4,
+        'name_id': 0,
         'stat':[
             'reads',
             'nread',
@@ -23,22 +23,6 @@ var kstat = {
         ]
     }
 };
-
-var link_field_total_num = 25;
-var link_field_to_post = [
-    'obytes',
-    'obytes64',
-    'rbytes',
-    'rbytes64'
-];
-
-var disk_field_total_num = 15;
-var disk_field_to_post = [
-    'reads',
-    'writes',
-    'nread',
-    'nwritten'
-];
 
 //deps
 var child_process = require('child_process');
@@ -53,17 +37,12 @@ module.exports = function( axon ) {
         }
     };
 
-    var emit_link = function(link) {
-        for (var i = 0; i < link_field_to_post.length; i++)
-            axon.emit( 'data',  'link.' + link['name'] + '.' + link_field_to_post[i], link[link_field_to_post[i]] );
-    };
-
     var on_kstat_complete = function(err, stdout, stderr, type_name) {
         var data = [];
         var field = [];
         var type = kstat[type_name];
         var lines = stdout.split('\n');
-        var length = lines.length / type['num'];
+        var length = parseInt(lines.length / type['num']);
         for (var i = 0; i < length; i++) {
             data = [];
             field = [];
@@ -76,6 +55,7 @@ module.exports = function( axon ) {
                 data[metric[0]] = metric[1];
             }
             data['nervous_name'] = field[type['name_id']];
+            data['nervous_type'] = type_name;
             emit_kstat(type, data);
         }
     };
@@ -166,6 +146,3 @@ module.exports = function( axon ) {
 
     setInterval( check_global_zone_usage, interval );
 };
-
-
-
