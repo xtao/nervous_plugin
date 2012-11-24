@@ -1,12 +1,43 @@
 // configuration
 var interval = 15*1000;
 
+var kstat = {
+    'link':{
+        'num': 25,
+        'name_id': 4,
+        'stat':[
+            'obytes',
+            'obytes64',
+            'rbytes',
+            'rbytes64'
+        ]
+    },
+    'disk':{
+        'num': 15,
+        'name_id': 4,
+        'stat':[
+            'reads',
+            'nread',
+            'writes',
+            'nwrites'
+        ]
+    }
+};
+
 var link_field_total_num = 25;
 var link_field_to_post = [
     'obytes',
     'obytes64',
     'rbytes',
     'rbytes64'
+];
+
+var disk_field_total_num = 15;
+var disk_field_to_post = [
+    'reads',
+    'writes',
+    'nread',
+    'nwritten'
 ];
 
 //deps
@@ -16,27 +47,41 @@ var child_process = require('child_process');
 //our plugin main function
 module.exports = function( axon ) {
 
+    var emit_kstat = function(type, data) {
+        for (var id in type) {
+            axon.emit( 'data',  data['nervous_type'] + '.' + data['nervous_name'] + '.' + type[id], data[type[id]] );
+        }
+    };
+
     var emit_link = function(link) {
         for (var i = 0; i < link_field_to_post.length; i++)
             axon.emit( 'data',  'link.' + link['name'] + '.' + link_field_to_post[i], link[link_field_to_post[i]] );
-    }
+    };
+
+    var on_kstat_complete = function(err, stdout, stderr, type_name) {
+        var data = [];
+        var field = [];
+        var type = kstat[type_name];
+        var lines = stdout.split('\n');
+        var length = lines.length / type['num'];
+        for (var i = 0; i < length; i++) {
+            data = [];
+            field = [];
+            for (var j = type['num'] * i; j < type['num'] * (i + 1); j++) {
+                field = lines[j].split(':');
+                if (field.length < 4) {
+                    continue;
+                }
+                var metric = field[3].split('\t');
+                data[metric[0]] = metric[1];
+            }
+            data['nervous_name'] = field[type['name_id']];
+            emit_kstat(type, data);
+        }
+    };
 
     var on_link_complete = function( err, stdout, stderr ) {
-        var link = [];
-        var lines = stdout.split('\n');
-        for (var i = 0; i < lines.length; i++) {
-            var field = lines[i].split(':');
-            if (field.length < 4) {
-                continue;
-            }
-            var metric = field[3].split('\t');
-            link[metric[0]] = metric[1];
-            if (i % link_field_total_num == link_field_total_num - 1) {
-                link['name'] = field[2];
-                emit_link(link);
-                link = [];
-            }
-        }
+        on_kstat_complete(err, stdout, stderr, 'link');
     };
 
     var on_load_avg_complete = function( err, stdout, stderr ) {
@@ -76,41 +121,8 @@ module.exports = function( axon ) {
         }
     };
 
-    var on_io_complete = function( err, stdout, stderr ) {
-        /* %b wait*/
-        var R_S_ID = 0;
-        var W_S_ID = 1;
-        var KR_S_ID = 2;
-        var KW_S_ID = 3;
-        var WAIT_ID = 4;
-        var B_ID = 9;
-        var DEVICE_ID = 10;
-        var lines = stdout.split('\n');
-        if (lines.length < 3) {
-            return;
-        }
-        for (var i = 2; i < lines.length; i++) {
-            var payload = lines[i];
-            payload = payload.replace(/[ ]+/g, ' ').replace(/^ /, '').replace(/ $/, '');
-            var field = payload.split(' ');
-            if (field.length < 11) {
-                continue;
-            }
-            var device = field[DEVICE_ID];
-            var wait = field[WAIT_ID];
-            var busy = field[B_ID];
-            var read = field[R_S_ID];
-            var write = field[W_S_ID];
-            var kread = field[KR_S_ID];
-            var kwrite = field[KW_S_ID];
-            axon.emit( 'data',  'io.' + device + '.wait', wait );
-            axon.emit( 'data',  'io.' + device + '.busy', busy );
-            axon.emit( 'data',  'io.' + device + '.read', read );
-            axon.emit( 'data',  'io.' + device + '.write', write );
-            axon.emit( 'data',  'io.' + device + '.kread', kread );
-            axon.emit( 'data',  'io.' + device + '.kwrite', kwrite );
-        }
-
+    var on_disk_complete = function( err, stdout, stderr ) {
+        on_kstat_complete(err, stdout, stderr, 'disk');
     };
 
     var on_df_complete = function( err, stdout, stderr ) {
@@ -147,7 +159,7 @@ module.exports = function( axon ) {
     var check_global_zone_usage = function() {
         child_process.exec( 'uptime ', on_load_avg_complete);
         child_process.exec( 'vmstat 1 1 ', on_load_complete);
-        child_process.exec( 'iostat -xn 1 1 ', on_io_complete);
+        child_process.exec( 'kstat -c disk -p', on_disk_complete);
         child_process.exec( 'df -k zones', on_df_complete);
         child_process.exec( 'kstat -m link -n igb* -p', on_link_complete );
     };
