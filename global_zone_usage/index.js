@@ -17,7 +17,7 @@ var kstat = {
         'name_id': 2,
         'stat':[
             'reads',
-            'nread',
+            'nreads',
             'writes',
             'nwrites'
         ]
