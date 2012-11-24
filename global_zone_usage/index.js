@@ -14,7 +14,7 @@ var kstat = {
     },
     'disk':{
         'num': 15,
-        'name_id': 0,
+        'name_id': 2,
         'stat':[
             'reads',
             'nread',
