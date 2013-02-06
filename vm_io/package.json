@@ -1,0 +1,31 @@
+{
+  "name": "nervous_plugin_vm_io",
+  "preferGlobal": false,
+  "version": "0.1.0",
+  "author": {
+    "name": "subdragon",
+    "email": "subdragon@gmail.com"
+  },
+  "description": "SmartOS vm io plugin for Nervous",
+  "contributors": [
+    {
+      "name": "subdragon",
+      "email": "subdragon@gmail.com"
+    }
+  ],
+  "main": "./index.js",
+  "keywords": [
+    "nervous",
+    "monitoring",
+    "plugable",
+    "plugin"
+  ],
+  "dependencies": {},
+  "noAnalyze": true,
+  "devDependencies": {},
+  "bundleDependencies": [],
+  "license": "MIT",
+  "engine": {
+    "node": ">=0.6"
+  }
+}

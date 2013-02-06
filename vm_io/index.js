@@ -6,8 +6,8 @@
 
   module.exports = function(axon) {
     var INTERVAL, dtrace_io_cmd, iod, parse_vmadm, vmadm_cmd;
-    dtrace_io_cmd = "/Users/subdragon/Code/dtrace-io/mock-d.bash";
-    vmadm_cmd = "/Users/subdragon/Code/dtrace-io/mock-vmadm.bash";
+    dtrace_io_cmd = "/zones/stdyun/bin/dtrace-io.bash";
+    vmadm_cmd = "vmadm list -p -o pid,alias state=running";
     INTERVAL = 5;
     iod = child_process.spawn(dtrace_io_cmd);
     parse_vmadm = function(vmadm) {
@@ -39,7 +39,7 @@
             items = line.split(" ");
             alias = vmadm_map[items[1]];
             if (alias) {
-              alias = alias.replace(/\ /g, "");
+              alias = alias.replace(/\ /g, "").replace(/\./g, "_");
               flag = items[items.length - 2];
               value = Math.floor(items[items.length - 1] / INTERVAL);
               if (flag === "R") {
